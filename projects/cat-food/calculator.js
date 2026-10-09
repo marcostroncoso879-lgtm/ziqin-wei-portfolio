@@ -35,15 +35,23 @@
     const rer = finite(70 * kg ** 0.75, 'weight');
     return { rer, target: finite(rer * (input.status === 'neutered' ? 1.2 : 1.4), 'weight') };
   }
+  function ratios(input) {
+    const dryPct = number(input.dryPct, 'dryPct', 0, 100);
+    const freshPct = input.freshPct === undefined ? 0 : number(input.freshPct, 'freshPct', 0, 100);
+    if (dryPct + freshPct > 100) throw new InputError('freshPct', '干粮+鲜食不能超过100%。请降低干粮或鲜食的餐食能量占比。');
+    return { dryPct, freshPct, wetPct: 100 - (dryPct + freshPct) };
+  }
   function calculate(input) {
     const t = target(input);
-    const ratio = number(input.dryPct, 'dryPct', 0, 100);
+    const allocation = ratios(input);
+    const freshType = input.freshType === undefined ? 'complete' : input.freshType;
+    if (!['complete', 'topper'].includes(freshType)) throw new InputError('freshType', '请选择完整均衡鲜食主食或普通熟肉加餐。');
     const treats = number(input.treats, 'treats');
     if (treats > t.target) throw new InputError('treats', `零食超过每日目标。请将零食降至不超过 ${String(t.target)} kcal/day，或核实并调整自定义目标；不要生成负克重。`);
     const remaining = t.target - treats;
     function food(kind, pct) {
       const data = input[kind] || {};
-      const kcal = remaining * pct / 100;
+      const kcal = remaining * (pct / 100);
       if (pct === 0 || remaining === 0) return { active: false, pct, kcal: 0, grams: 0, cost: null, costState: 'unused' };
       const density = energyPerGram(data.energy, data.unit, kind + 'Energy');
       const grams = finite(kcal / density, kind + 'Energy');
@@ -53,12 +61,16 @@
       if (cost !== null && (!Number.isFinite(cost) || !Number.isFinite(cost * 30))) throw new InputError(kind + 'Price', '成本超出可计算范围，请调整输入。');
       return { active: true, pct, kcal, grams, cost, costState: blank ? 'missing' : 'provided' };
     }
-    const dry = food('dry', ratio), wet = food('wet', 100 - ratio);
-    const missing = [dry, wet].some(f => f.costState === 'missing');
-    const dailyCost = missing ? null : (dry.cost || 0) + (wet.cost || 0);
+    const dry = food('dry', allocation.dryPct), wet = food('wet', allocation.wetPct), fresh = food('fresh', allocation.freshPct);
+    const foods = [dry, wet, fresh];
+    const missing = foods.some(f => f.costState === 'missing');
+    const dailyCost = missing ? null : foods.reduce((sum, f) => sum + (f.cost === null ? 0 : f.cost), 0);
     if (dailyCost !== null && (!Number.isFinite(dailyCost) || !Number.isFinite(dailyCost * 30))) throw new InputError('dryPrice', '合计成本超出可计算范围。');
-    return { ...t, treats, remaining, dry, wet, treatPct: treats / t.target * 100,
-      treatWarning: treats > t.target * 0.1, dailyCost, monthlyCost: dailyCost === null ? null : dailyCost * 30 };
+    const extraKcal = treats + (freshType === 'topper' ? fresh.kcal : 0);
+    return { ...t, treats, remaining, dry, wet, fresh, freshType, ...allocation,
+      treatPct: treats / t.target * 100, treatWarning: treats > t.target * 0.1,
+      extraKcal, combinedExtraPct: extraKcal / t.target * 100, extraWarning: extraKcal > t.target * 0.1,
+      dailyCost, monthlyCost: dailyCost === null ? null : dailyCost * 30 };
   }
   function dryMatter(nutrient, moisture) {
     const m = number(moisture, 'moisture', 0, 100);
@@ -67,5 +79,5 @@
     if (n > 100 - m) throw new InputError('nutrient', '营养素不能超过干物质份额（100 − 水分%）。请核对标签。');
     return n / (100 - m) * 100;
   }
-  return { InputError, number, energyPerGram, target, calculate, dryMatter };
+  return { InputError, number, energyPerGram, target, ratios, calculate, dryMatter };
 }));

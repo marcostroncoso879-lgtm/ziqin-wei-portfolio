@@ -15,6 +15,7 @@
   <noscript><p class="notice">请启用 JavaScript 后使用。本页不需要联网。</p></noscript>
   <div class="layout">
   <form id="calculator" novalidate autocomplete="off">
+    <p class="hint"><a href="evidence.html">论文依据与四款产品官方标签 ↗</a></p>
     <div class="actions"><button type="button" id="example">填入演示数据</button><button type="reset">一键重置</button></div>
     <p id="demo" class="notice" hidden>演示数据，开始前请替换包装标签。示例名称、能量和价格均为虚构，不对应真实产品。</p>
     <fieldset><legend>每日能量目标</legend>
@@ -27,9 +28,15 @@
       <p id="target-preview" class="hint" aria-live="polite"></p>
       <p class="hint">RER = 70 × 体重kg<sup>0.75</sup>。参考目标 = RER × 绝育系数。任何热量计算都只是起点，请根据体重、体况及实际响应与兽医调整。</p>
     </fieldset>
-    <fieldset><legend>主粮能量分配</legend>
-      <div class="field"><label for="treats">零食总能量（kcal/day，没有请填 0）</label><input id="treats" type="number" min="0" step="any" value="0" aria-describedby="treats-error"><p class="error" id="treats-error"></p></div>
-      <div class="field"><label for="dryPct">干粮占主粮能量（%，0 至 100）</label><input id="dryPct" type="number" min="0" max="100" step="any" value="50" aria-describedby="ratio-note dryPct-error"><p id="ratio-note" class="hint">先从目标扣除零食，再按能量分配干湿粮。不是重量占比。</p><p class="error" id="dryPct-error"></p></div>
+    <fieldset><legend>餐食能量分配</legend>
+      <div class="field"><label for="treats">其他零食总能量（kcal/day，没有请填 0）</label><input id="treats" type="number" min="0" step="any" value="0" aria-describedby="treats-note treats-error"><p id="treats-note" class="hint">不含下方单独计算的鲜食或熟肉；同一份食物只计一次，避免重复扣除热量。</p><p class="error" id="treats-error"></p></div>
+      <div class="pair">
+        <div class="field"><label for="dryPct">干粮占餐食能量（%，0 至 100）</label><input id="dryPct" type="number" min="0" max="100" step="any" value="50" aria-describedby="ratio-note dryPct-error"><p class="error" id="dryPct-error"></p></div>
+        <div class="field"><label for="freshPct">鲜食占餐食能量（%，0 至 100）</label><input id="freshPct" type="number" min="0" max="100" step="any" value="0" aria-describedby="ratio-note freshPct-error"><p class="error" id="freshPct-error"></p></div>
+      </div>
+      <p id="ratio-note" class="hint">餐食能量 = 每日目标 − 单独填写的零食。干粮、湿粮、鲜食都以扣除零食后的餐食能量为分母，绝不是克重比例；湿粮占比 = 100% − 干粮% − 鲜食%。</p>
+      <p id="meal-preview" class="hint" aria-live="polite"></p>
+      <p id="wet-preview" class="hint" aria-live="polite"></p>
       <div class="foods">
         <section><h2>干粮</h2><div class="field"><label for="dryName">食品名称（选填）</label><input id="dryName" type="text" maxlength="100"></div>
           <div class="field"><label for="dryEnergy">包装标注代谢能</label><input id="dryEnergy" type="number" min="0" step="any" aria-describedby="dryEnergy-error"><p class="error" id="dryEnergy-error"></p></div>
@@ -41,14 +48,26 @@
           <div class="field"><label for="wetUnit">湿粮能量单位</label><select id="wetUnit"><option>kcal/kg</option><option selected>kcal/100g</option></select></div>
           <div class="field"><label for="wetPrice">价格（元/kg，选填）</label><input id="wetPrice" type="number" min="0" step="any" aria-describedby="wetPrice-error"><p class="error" id="wetPrice-error"></p></div>
         </section>
+        <section class="fresh-food"><h2>鲜食</h2>
+          <div class="field"><label for="freshType">鲜食类型</label><select id="freshType" aria-describedby="fresh-type-note freshType-error"><option value="complete">完整均衡鲜食主食</option><option value="topper">普通熟肉加餐</option></select><p class="error" id="freshType-error"></p></div>
+          <p id="fresh-type-note" class="hint">完整均衡鲜食主食仅指由包装标签确认适用成年猫维护期的完整均衡商业主食。普通熟鸡肉、牛肉或食材不能自动视为完整主食。</p>
+          <div id="fresh-confirm-field" class="field"><label class="check-label" for="freshConfirmed"><input id="freshConfirmed" type="checkbox" aria-describedby="freshConfirmed-error">我已按包装确认：这是适用成年猫维护期的完整均衡商业鲜食主食。</label><p class="hint">仅在这类鲜食实际参与配比时需确认；工具不能替你核验标签。</p><p class="error" id="freshConfirmed-error"></p></div>
+          <div class="pair">
+            <div class="field"><label for="freshName">鲜食名称（选填）</label><input id="freshName" type="text" maxlength="100"></div>
+            <div class="field"><label id="fresh-energy-label" for="freshEnergy">包装标注代谢能</label><input id="freshEnergy" type="number" min="0" step="any" aria-describedby="fresh-energy-note freshEnergy-error"><p class="error" id="freshEnergy-error"></p></div>
+            <div class="field"><label for="freshUnit">鲜食能量单位</label><select id="freshUnit"><option>kcal/kg</option><option selected>kcal/100g</option></select></div>
+            <div class="field"><label for="freshPrice">鲜食价格（元/kg，选填）</label><input id="freshPrice" type="number" min="0" step="any" aria-describedby="freshPrice-error"><p class="error" id="freshPrice-error"></p></div>
+          </div>
+          <p id="fresh-energy-note" class="hint">请输入对应产品包装的代谢能，不补算缺失标签。</p>
+        </section>
       </div>
-      <p class="hint">请选用适合成年猫的完整均衡主粮，本工具不能核验其营养完整性。未参与配比的一方无需填写能量及价格。空白价格表示未填写，不是免费。</p>
+      <p class="hint">干湿粮及完整均衡鲜食主食应适用成年猫维护期；熟肉加餐不是完整主食。未参与配比的类别无需填写能量及价格。空白价格表示未填写，不是免费。食物成本合计包括参与配比的干粮、湿粮、鲜食，但不含单独填写的零食成本。</p>
     </fieldset>
     <button class="primary" type="submit">计算每日方案</button>
   </form>
   <section class="result-panel" aria-labelledby="result-title">
     <p class="eyebrow">每天的一碗，有据可算</p><h2 id="result-title" tabindex="-1">每日参考方案</h2>
-    <div id="result" role="status" aria-live="polite" aria-atomic="true"><p>请先填入参与配比的食品包装代谢能，再计算。未填写前不生成克重。</p></div>
+    <div id="result" role="status" aria-live="polite" aria-atomic="true"><p>请先填入参与配比的食品能量（按对应类型的包装标签或已知参考值），再计算。未填写前不生成克重。</p></div>
     <p class="hint">显示值经过四舍五入，计算使用未舍入值。能量匹配不代表完整营养，也不能保证鲜食配方安全。</p>
     <button type="button" id="copy" disabled>复制每日方案</button>
     <div id="copy-fallback" hidden><label for="plan-text">每日方案文本（可选择后手动复制）</label><textarea id="plan-text" rows="12" readonly></textarea></div>
@@ -60,7 +79,7 @@
     <div class="pair"><div class="field"><label for="nutrient">某营养素 as-fed（%）</label><input id="nutrient" type="number" min="0" step="any" aria-describedby="nutrient-error"><p class="error" id="nutrient-error"></p></div><div class="field"><label for="moisture">水分（%，小于 100）</label><input id="moisture" type="number" min="0" max="100" step="any" aria-describedby="moisture-error"><p class="error" id="moisture-error"></p></div></div>
     <button type="button" id="dm-calculate">换算数值</button><p id="dm-result" role="status"></p>
   </details>
-  <section class="sources"><h2>公式与使用边界</h2><p>以包装标注的代谢能计算，不补算缺失标签，也不评价营养达标。输入仅在当前页面处理，不上传或主动保存。浏览器可能恢复表单，开始前请核对或重置。</p><p><a href="https://www.merckvetmanual.com/management-and-nutrition/nutrition-small-animals/nutritional-requirements-of-small-animals">Merck Veterinary Manual：静息能量 RER 公式</a>；<a href="https://www.merckvetmanual.com/multimedia/table/daily-maintenance-energy-requirements-for-dogs-and-cats">健康成年猫维护期系数与参考起点说明</a>。健康成年猫已绝育用 1.2 × RER、未绝育用 1.4 × RER，具体用量需按实际体况调整。</p><p><a href="https://wsava.org/wp-content/uploads/2025/11/WSAVA_GuidetoTreats_Cats_251107.pdf">WSAVA：猫咪零食喂养指南（PDF）</a>建议日常零食尽量低于每日热量的 10%，并以完整均衡主粮为基础。能量比例不能替代完整营养评估。</p><p>来源核对日期：2026 年 10 月 9 日。</p></section>
+  <section class="sources"><h2>公式与使用边界</h2><p>干湿粮与完整均衡商业鲜食按包装代谢能计算；普通熟肉按对应食物的已知参考热量估算。不补算缺失标签，也不评价营养达标。输入仅在当前页面处理，不上传或主动保存。浏览器可能恢复表单，开始前请核对或重置。</p><p><a href="https://www.merckvetmanual.com/management-and-nutrition/nutrition-small-animals/nutritional-requirements-of-small-animals">Merck Veterinary Manual：静息能量 RER 公式</a>；<a href="https://www.merckvetmanual.com/multimedia/table/daily-maintenance-energy-requirements-for-dogs-and-cats">健康成年猫维护期系数与参考起点说明</a>。健康成年猫已绝育用 1.2 × RER、未绝育用 1.4 × RER，具体用量需按实际体况调整。</p><p><a href="https://wsava.org/wp-content/uploads/2025/11/WSAVA_GuidetoTreats_Cats_251107.pdf">WSAVA：猫咪零食喂养指南（PDF）</a>建议日常零食尽量低于每日热量的 10%，并以完整均衡主粮为基础。能量比例不能替代完整营养评估。</p><p>来源核对日期：2026 年 10 月 9 日。</p></section>
 </main>
 <footer class="wrap">爱猫如爱人 · 用标签数据计算，用实际体况校准。</footer>
 </body>
