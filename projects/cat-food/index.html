@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>爱猫如爱人 · 每日食物计算器</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="calculator.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+<header class="wrap"><a class="brand" href="index.html">爱猫如爱人</a><span>本地计算 · 不上传数据</span></header>
+<main class="wrap">
+  <div class="intro"><p class="eyebrow">把包装上的能量，换成碗里的克数</p><h1>每日食物计算器</h1><p>仅适用于健康成年猫、理想体况、体重维护期。不提供幼猫、孕哺、患病或减重处方建议。</p></div>
+  <noscript><p class="notice">请启用 JavaScript 后使用。本页不需要联网。</p></noscript>
+  <div class="layout">
+  <form id="calculator" novalidate autocomplete="off">
+    <div class="actions"><button type="button" id="example">填入演示数据</button><button type="reset">一键重置</button></div>
+    <p id="demo" class="notice" hidden>演示数据，开始前请替换包装标签。示例名称、能量和价格均为虚构，不对应真实产品。</p>
+    <fieldset><legend>每日能量目标</legend>
+      <div class="field"><label for="mode">目标方式</label><select id="mode" aria-describedby="mode-error"><option value="formula">成年猫维护期公式起点</option><option value="custom">使用已有 / 兽医给定目标</option></select><p class="error" id="mode-error"></p></div>
+      <div id="formula-fields" class="pair">
+        <div class="field"><label for="weight">体重（kg）</label><input id="weight" type="number" min="0" step="any" value="4" aria-describedby="weight-error"><p class="error" id="weight-error"></p></div>
+        <div class="field"><label for="status">绝育状态</label><select id="status" aria-describedby="status-error"><option value="neutered">已绝育 · 1.2 × RER</option><option value="intact">未绝育 · 1.4 × RER</option></select><p class="error" id="status-error"></p></div>
+      </div>
+      <div id="custom-field" class="field" hidden><label for="custom">自定义目标（kcal/day）</label><input id="custom" type="number" min="0" step="any" aria-describedby="custom-error"><p class="error" id="custom-error"></p></div>
+      <p id="target-preview" class="hint" aria-live="polite"></p>
+      <p class="hint">RER = 70 × 体重kg<sup>0.75</sup>。参考目标 = RER × 绝育系数。任何热量计算都只是起点，请根据体重、体况及实际响应与兽医调整。</p>
+    </fieldset>
+    <fieldset><legend>主粮能量分配</legend>
+      <div class="field"><label for="treats">零食总能量（kcal/day，没有请填 0）</label><input id="treats" type="number" min="0" step="any" value="0" aria-describedby="treats-error"><p class="error" id="treats-error"></p></div>
+      <div class="field"><label for="dryPct">干粮占主粮能量（%，0 至 100）</label><input id="dryPct" type="number" min="0" max="100" step="any" value="50" aria-describedby="ratio-note dryPct-error"><p id="ratio-note" class="hint">先从目标扣除零食，再按能量分配干湿粮。不是重量占比。</p><p class="error" id="dryPct-error"></p></div>
+      <div class="foods">
+        <section><h2>干粮</h2><div class="field"><label for="dryName">食品名称（选填）</label><input id="dryName" type="text" maxlength="100"></div>
+          <div class="field"><label for="dryEnergy">包装标注代谢能</label><input id="dryEnergy" type="number" min="0" step="any" aria-describedby="dryEnergy-error"><p class="error" id="dryEnergy-error"></p></div>
+          <div class="field"><label for="dryUnit">干粮能量单位</label><select id="dryUnit"><option>kcal/kg</option><option>kcal/100g</option></select></div>
+          <div class="field"><label for="dryPrice">价格（元/kg，选填）</label><input id="dryPrice" type="number" min="0" step="any" aria-describedby="dryPrice-error"><p class="error" id="dryPrice-error"></p></div>
+        </section>
+        <section><h2>湿粮</h2><div class="field"><label for="wetName">食品名称（选填）</label><input id="wetName" type="text" maxlength="100"></div>
+          <div class="field"><label for="wetEnergy">包装标注代谢能</label><input id="wetEnergy" type="number" min="0" step="any" aria-describedby="wetEnergy-error"><p class="error" id="wetEnergy-error"></p></div>
+          <div class="field"><label for="wetUnit">湿粮能量单位</label><select id="wetUnit"><option>kcal/kg</option><option selected>kcal/100g</option></select></div>
+          <div class="field"><label for="wetPrice">价格（元/kg，选填）</label><input id="wetPrice" type="number" min="0" step="any" aria-describedby="wetPrice-error"><p class="error" id="wetPrice-error"></p></div>
+        </section>
+      </div>
+      <p class="hint">请选用适合成年猫的完整均衡主粮，本工具不能核验其营养完整性。未参与配比的一方无需填写能量及价格。空白价格表示未填写，不是免费。</p>
+    </fieldset>
+    <button class="primary" type="submit">计算每日方案</button>
+  </form>
+  <section class="result-panel" aria-labelledby="result-title">
+    <p class="eyebrow">每天的一碗，有据可算</p><h2 id="result-title" tabindex="-1">每日参考方案</h2>
+    <div id="result" role="status" aria-live="polite" aria-atomic="true"><p>请先填入参与配比的食品包装代谢能，再计算。未填写前不生成克重。</p></div>
+    <p class="hint">显示值经过四舍五入，计算使用未舍入值。能量匹配不代表完整营养，也不能保证鲜食配方安全。</p>
+    <button type="button" id="copy" disabled>复制每日方案</button>
+    <div id="copy-fallback" hidden><label for="plan-text">每日方案文本（可选择后手动复制）</label><textarea id="plan-text" rows="12" readonly></textarea></div>
+    <p id="copy-status" role="status"></p>
+  </section>
+  </div>
+  <details id="dm"><summary>可选工具 / 干物质数值换算</summary>
+    <p>营养素 as-fed % ÷（100 − 水分%）× 100。只是标签数值换算，不判断达标；保证分析 min/max 不是实测值，分别代入上下限不等于实际干物质营养浓度。</p>
+    <div class="pair"><div class="field"><label for="nutrient">某营养素 as-fed（%）</label><input id="nutrient" type="number" min="0" step="any" aria-describedby="nutrient-error"><p class="error" id="nutrient-error"></p></div><div class="field"><label for="moisture">水分（%，小于 100）</label><input id="moisture" type="number" min="0" max="100" step="any" aria-describedby="moisture-error"><p class="error" id="moisture-error"></p></div></div>
+    <button type="button" id="dm-calculate">换算数值</button><p id="dm-result" role="status"></p>
+  </details>
+  <section class="sources"><h2>公式与使用边界</h2><p>以包装标注的代谢能计算，不补算缺失标签，也不评价营养达标。输入仅在当前页面处理，不上传或主动保存。浏览器可能恢复表单，开始前请核对或重置。</p><p><a href="https://www.merckvetmanual.com/management-and-nutrition/nutrition-small-animals/nutritional-requirements-of-small-animals">Merck Veterinary Manual：静息能量 RER 公式</a>；<a href="https://www.merckvetmanual.com/multimedia/table/daily-maintenance-energy-requirements-for-dogs-and-cats">健康成年猫维护期系数与参考起点说明</a>。健康成年猫已绝育用 1.2 × RER、未绝育用 1.4 × RER，具体用量需按实际体况调整。</p><p><a href="https://wsava.org/wp-content/uploads/2025/11/WSAVA_GuidetoTreats_Cats_251107.pdf">WSAVA：猫咪零食喂养指南（PDF）</a>建议日常零食尽量低于每日热量的 10%，并以完整均衡主粮为基础。能量比例不能替代完整营养评估。</p><p>来源核对日期：2026 年 10 月 9 日。</p></section>
+</main>
+<footer class="wrap">爱猫如爱人 · 用标签数据计算，用实际体况校准。</footer>
+</body>
+</html>
